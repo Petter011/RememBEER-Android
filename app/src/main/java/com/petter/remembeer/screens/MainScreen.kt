@@ -22,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.petter.remembeer.helper.BeerViewModel
@@ -31,7 +30,7 @@ import com.petter.remembeer.ui.navigation.Navigations
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    //viewModel: BeerViewModel
+    viewModel: BeerViewModel,
 ) {
     Scaffold(
         bottomBar = {
@@ -50,7 +49,7 @@ fun MainScreen(
                 )
             )
         ) {
-            Navigations(navController = navController)
+            Navigations(navController = navController, viewModel = viewModel)
         }
     }
 }

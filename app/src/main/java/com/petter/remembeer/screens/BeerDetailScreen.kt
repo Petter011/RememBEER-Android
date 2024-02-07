@@ -8,18 +8,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.petter.remembeer.helper.Beer
 import com.petter.remembeer.helper.BeerViewModel
 
 @Composable
 fun BeerDetailScreen(
-    /*navController: NavController,
+    navController: NavHostController,
     viewModel: BeerViewModel,
-    selectedBeer: Beer*/
+    selectedBeer: Beer
 ) {
     Column(
         modifier = Modifier
@@ -30,9 +32,9 @@ fun BeerDetailScreen(
     ) {
         Text(text = "Beer Details")
         Spacer(modifier = Modifier.height(16.dp))
-        /*Text(text = "Type: ${selectedBeer.type}")
+        Text(text = "Type: ${selectedBeer.type}")
         Text(text = "Name: ${selectedBeer.name}")
         Text(text = "Note: ${selectedBeer.note}")
-        Text(text = "Rating: ${selectedBeer.rating}")*/
+        Text(text = "Rating: ${selectedBeer.rating}")
     }
 }

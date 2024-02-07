@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,17 +40,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.petter.remembeer.helper.Beer
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.helper.Header
-import java.util.UUID
 
 
 @Composable
-fun BeerScreen() {
-    val viewModel: BeerViewModel = viewModel()
+fun BeerScreen(navController: NavHostController, viewModel: BeerViewModel) {
 
     Column(
         modifier = Modifier
@@ -59,50 +57,46 @@ fun BeerScreen() {
         verticalArrangement = Arrangement.Top
     ) {
         Header(text = "My Beer")
-        ListView(viewModel = viewModel)
+        ListView(viewModel = viewModel, navController = navController)
 
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AddBeerButton(text = "Add Beer")
+        AddBeerButton(text = "Add Beer", viewModel = viewModel)
 
     }
 }
 
-
-
 @Composable
 fun ListView(
-    //navController: NavHostController,
+    navController: NavHostController,
     viewModel: BeerViewModel
 ) {
 
-    val beers = viewModel.beers.value
+    val beersState by viewModel.beers.collectAsState()
 
     Column {
         Spacer(modifier = Modifier.height(20.dp))
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(beers) { beer ->
+            items(beersState) { beer ->
                 Card(
                     modifier = Modifier
                         .clickable {
-                            /*navController.navigate(NavigationItem.BeerDetail.route)
+                            navController.navigate("${NavigationItem.BeerDetail.route}/${beer.id}")
                             {
                                 launchSingleTop = true
                                 restoreState = true
                                 popUpTo(NavigationItem.MyBeer.route) {
-                                    inclusive = true // Set inclusive to true to remove MyBeer from the back stack as well
+                                    inclusive =
+                                        false // Set inclusive to true to remove MyBeer from the back stack as well
                                 }
-                                Log.d("Get beerId","beerId: {beerId}")
-
-                            }*/
+                            }
                         }
                         .padding(8.dp)
                         .fillMaxWidth(),
@@ -134,16 +128,16 @@ fun ListView(
     }
 }
 
+
 @Composable
 fun AddBeerButton(
+    viewModel: BeerViewModel,
     text: String,
 ) {
-    val beerViewModel: BeerViewModel = viewModel()
-
     var showSheet by remember { mutableStateOf(false) }
 
     if (showSheet) {
-        BottomSheet(onDismiss = { showSheet = false }, viewModel = beerViewModel)
+        BottomSheet(onDismiss = { showSheet = false }, viewModel = viewModel)
     }
     // Button to trigger the bottom sheet
     ElevatedButton(
@@ -230,10 +224,10 @@ fun AddBeerSheet(
     }
     FloatingActionButton(
         onClick = {
-            val beerId = UUID.randomUUID()
+            //val beerId = UUID.randomUUID()
             // Create a new Beer object with the entered details
             val newBeer = Beer(
-                id = beerId,
+                //id = beerId,
                 type = beerType,
                 name = beerName,
                 note = beerNote,

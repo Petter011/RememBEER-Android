@@ -2,13 +2,9 @@ package com.petter.remembeer.ui.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.screens.AllBeerScreen
 import com.petter.remembeer.screens.BeerDetailScreen
@@ -20,14 +16,12 @@ import java.util.UUID
 
 
 @Composable
-fun Navigations(navController: NavHostController) {
+fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
 
-    /*val navController = rememberNavController()
-    val viewModel: BeerViewModel = viewModel()*/
 
     NavHost(navController, startDestination = NavigationItem.MyBeer.route) {
         composable(NavigationItem.MyBeer.route) {
-            BeerScreen()
+            BeerScreen(navController, viewModel)
         }
         composable(NavigationItem.ReceivedBeer.route) {
             ReceivedBeerScreen()
@@ -38,10 +32,7 @@ fun Navigations(navController: NavHostController) {
         composable(NavigationItem.Settings.route) {
             SettingsScreen()
         }
-        /*composable(
-            route = "${NavigationItem.BeerDetail.route}/{beerId}",
-            arguments = listOf(navArgument("beerId") { type = NavType.StringType })
-        ) { backStackEntry ->
+        composable(NavigationItem.BeerDetail.route + "/{beerId}") { backStackEntry ->
             val beerId = UUID.fromString(backStackEntry.arguments?.getString("beerId") ?: "")
             val selectedBeer = viewModel.getBeerById(beerId)
 
@@ -51,10 +42,7 @@ fun Navigations(navController: NavHostController) {
                 // Handle case where selected beer is null
                 Text("Selected beer not found")
             }
-        }*/
-
-        composable(NavigationItem.BeerDetail.route) {
-            BeerDetailScreen()
         }
     }
 }
+
