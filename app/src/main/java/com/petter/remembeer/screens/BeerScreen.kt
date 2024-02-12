@@ -1,6 +1,5 @@
 package com.petter.remembeer.screens
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,22 +9,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -38,17 +34,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.petter.remembeer.helper.Background
 import com.petter.remembeer.helper.Beer
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.helper.Header
 
 
 @Composable
-fun BeerScreen(navController: NavHostController, viewModel: BeerViewModel) {
-
+fun BeerScreen(
+    navController: NavHostController,
+    viewModel: BeerViewModel
+) {
+    Background()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,7 +59,6 @@ fun BeerScreen(navController: NavHostController, viewModel: BeerViewModel) {
     ) {
         Header(text = "My Beer")
         ListView(viewModel = viewModel, navController = navController)
-
     }
     Column(
         modifier = Modifier
@@ -66,8 +66,7 @@ fun BeerScreen(navController: NavHostController, viewModel: BeerViewModel) {
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AddBeerButton(text = "Add Beer", viewModel = viewModel)
-
+        AddBeerButton(text = "Add Beer", viewModel = viewModel, navController = navController)
     }
 }
 
@@ -76,19 +75,29 @@ fun ListView(
     navController: NavHostController,
     viewModel: BeerViewModel
 ) {
-
     val beersState by viewModel.beers.collectAsState()
+
+    // Preprocess the list to merge consecutive beers with the same type
+    val mergedBeers = mutableListOf<Beer>()
+    var previousType: String? = null
+    for (beer in beersState) {
+        if (beer.type != previousType) {
+            mergedBeers.add(beer)
+            previousType = beer.type
+        }
+    }
 
     Column {
         Spacer(modifier = Modifier.height(20.dp))
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier.weight(1f)
         ) {
-            items(beersState) { beer ->
+            items(mergedBeers) { beer ->
                 Card(
                     modifier = Modifier
                         .clickable {
-                            navController.navigate("${NavigationItem.BeerDetail.route}/${beer.id}")
+                            navController.navigate("${NavigationItem.BeerType.route}/${beer.id}")
                             {
                                 launchSingleTop = true
                                 restoreState = true
@@ -101,24 +110,27 @@ fun ListView(
                         .padding(8.dp)
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    /*colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    ),*/
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Black
+                    ),
                     elevation = CardDefaults.cardElevation(
                         defaultElevation = 10.dp
                     )
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
                             text = beer.type,
-                            fontSize = 20.sp,
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                color = Color.Yellow,
+                                textAlign = TextAlign.Center,
+                            ),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 8.dp),
-                            color = Color.Black
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
@@ -133,22 +145,25 @@ fun ListView(
 fun AddBeerButton(
     viewModel: BeerViewModel,
     text: String,
+    navController: NavHostController
 ) {
     var showSheet by remember { mutableStateOf(false) }
 
     if (showSheet) {
-        BottomSheet(onDismiss = { showSheet = false }, viewModel = viewModel)
+        BottomSheet(onDismiss = { showSheet = false }, viewModel = viewModel, navController)
     }
-    // Button to trigger the bottom sheet
     ElevatedButton(
         onClick = { showSheet = true },
-        modifier = Modifier.padding(36.dp),
-        colors = ButtonDefaults.buttonColors(Color.Black)
+        modifier = Modifier
+            .padding(36.dp)
+            .size(width = 230.dp, height = 70.dp),
+        colors = ButtonDefaults.buttonColors(Color.Black),
+
     ) {
         Text(
             text = text,
             style = TextStyle(
-                fontSize = 20.sp,
+                fontSize = 24.sp,
                 color = Color.Yellow
             )
         )
@@ -159,9 +174,10 @@ fun AddBeerButton(
 @Composable
 fun BottomSheet(
     onDismiss: () -> Unit,
-    viewModel: BeerViewModel
+    viewModel: BeerViewModel,
+    navController: NavHostController
 ) {
-    val modalBottomSheetState = rememberModalBottomSheetState()
+    val modalBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -170,82 +186,26 @@ fun BottomSheet(
     ) {
         AddBeerSheet(
             viewModel = viewModel,
-            onBeerAdded = onDismiss
+            onBeerAdded = onDismiss,
+            navController
         )
     }
 }
 
-@Composable
-fun AddBeerSheet(
-    viewModel: BeerViewModel,
-    onBeerAdded: () -> Unit
-) {
-    var beerType by remember { mutableStateOf("") }
-    var beerName by remember { mutableStateOf("") }
-    var beerNote by remember { mutableStateOf("") }
-    var beerRating by remember { mutableStateOf(0) }
 
-    Column(
-        modifier = Modifier
-            .padding(vertical = 50.dp)
-    ) {
-        OutlinedTextField(
-            value = beerType,
-            onValueChange = { beerType = it },
-            label = { Text(text = "Type") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-        )
-        OutlinedTextField(
-            value = beerName,
-            onValueChange = { beerName = it },
-            label = { Text(text = "Name") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-        )
-        OutlinedTextField(
-            value = beerNote,
-            onValueChange = { beerNote = it },
-            label = { Text(text = "Note") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-        )
-        OutlinedTextField(
-            value = beerRating.toString(),
-            onValueChange = { beerRating = it.toIntOrNull() ?: 0 },
-            label = { Text(text = "Rating") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-        )
-    }
-    FloatingActionButton(
-        onClick = {
-            //val beerId = UUID.randomUUID()
-            // Create a new Beer object with the entered details
-            val newBeer = Beer(
-                //id = beerId,
-                type = beerType,
-                name = beerName,
-                note = beerNote,
-                rating = beerRating
-            )
-            // Add the beer to the ViewModel
-            viewModel.addBeer(newBeer)
-            Log.d("AddBeerSheet", "New beer added: $newBeer")
 
-            onBeerAdded()
 
-        },
-        modifier = Modifier
-            .padding(16.dp)
-    ) {
-        Icon(Icons.Filled.Add, "Add Beer")
-    }
-}
+/*@Composable
+fun SampleDefault() {
+    FVerticalWheelPicker(
+        modifier = Modifier.width(60.dp),
+        // Specified item count.
+        count = 50,
+        debug = true,
+    )
+}*/
+
+
 
 
 /*@Preview(showBackground = true)

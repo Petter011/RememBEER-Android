@@ -6,20 +6,15 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
 
-//@Parcelize
 data class Beer(
     var id: UUID = UUID.randomUUID(),
     var type: String = "",
     var name: String = "",
     var note: String = "",
-    var rating: Int = 0
+    var rating: Int = 0,
+    var image: String? = null
 
-)//: Parcelable
-
-{
-    override fun toString(): String {
-        return "Beer(id=$id, type=$type, name=$name, note=$note, rating=$rating)"
-    }
+) {
 }
 
 class BeerViewModel : ViewModel() {
@@ -45,8 +40,21 @@ class BeerViewModel : ViewModel() {
     fun getBeerById(beerId: UUID): Beer? {
         return beers.value.find { it.id == beerId }
     }
-
 }
+
+/*private val _capturedImage = MutableStateFlow<Bitmap?>(null)
+    val capturedImage: StateFlow<Bitmap?> = _capturedImage*/
+
+
+    /*fun capturePhoto(bitmap: Bitmap) {
+        _capturedImage.value = bitmap
+    }
+
+    override fun onCleared() {
+        _capturedImage.value?.recycle()
+        super.onCleared()
+    }*/
+
 
 /*{
     override fun toString(): String {

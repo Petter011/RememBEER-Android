@@ -60,6 +60,7 @@ sealed class NavigationItem(var route: String, val icon: ImageVector?, var title
     object AllBeer : NavigationItem("All", Icons.Rounded.Star, "All")
     object Settings : NavigationItem("Settings", Icons.Rounded.Settings, "Settings")
     object BeerDetail : NavigationItem("BeerDetail", null, "BeerDetail")
+    object BeerType : NavigationItem("BeerType", null, "BeerType")
 }
 
 @Composable
