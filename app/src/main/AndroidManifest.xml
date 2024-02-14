@@ -17,6 +17,9 @@
         android:theme="@style/Theme.RememBEER"
         tools:targetApi="31">
         <activity
+            android:name=".screens.ScanActivity"
+            android:theme="@style/Theme.AppCompat"/>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

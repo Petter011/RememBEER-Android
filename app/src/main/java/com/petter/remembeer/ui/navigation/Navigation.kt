@@ -28,14 +28,11 @@ fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
             ReceivedBeerScreen(viewModel)
         }
         composable(NavigationItem.AllBeer.route) {
-            AllBeerScreen()
+            AllBeerScreen(navController, viewModel)
         }
         composable(NavigationItem.Settings.route) {
             SettingsScreen()
         }
-        /*composable(NavigationItem.ShowCamera.route){
-            ShowCameraScreen(viewModel)
-        }*/
         composable(NavigationItem.BeerDetail.route + "/{beerId}") { backStackEntry ->
             val beerId = UUID.fromString(backStackEntry.arguments?.getString("beerId") ?: "")
             val selectedBeer = viewModel.getBeerById(beerId)

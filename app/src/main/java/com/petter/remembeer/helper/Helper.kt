@@ -17,7 +17,7 @@ import com.petter.remembeer.R
 
 @Composable
 fun Header(text : String){
-    Column {
+    Column() {
         Text(
             text = text,
             style = TextStyle(

@@ -62,6 +62,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.room:room-common:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -70,20 +72,20 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("androidx.navigation:navigation-compose:2.7.6")
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.0")
-    implementation ("androidx.compose.ui:ui-tooling:1.6.0")
-    implementation ("androidx.compose.foundation:foundation:1.6.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.6.1")
+    implementation ("androidx.compose.ui:ui-tooling:1.6.1")
+    implementation ("androidx.compose.foundation:foundation:1.6.1")
     implementation ("androidx.compose.material:material:1.6.0")
-    implementation ("androidx.compose.runtime:runtime:1.6.0")
+    implementation ("androidx.compose.runtime:runtime:1.6.1")
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    implementation ("androidx.compose.ui:ui:1.6.0")
-    implementation ("androidx.compose.ui:ui-tooling-preview:1.6.0")
-    implementation ("androidx.compose.material3:material3:1.1.2")
+    implementation ("androidx.compose.ui:ui:1.6.1")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.6.1")
+    implementation ("androidx.compose.material3:material3:1.2.0")
 
     // CameraX
     implementation ("androidx.camera:camera-camera2:1.3.1")
@@ -93,7 +95,15 @@ dependencies {
     implementation ("androidx.camera:camera-video:1.3.1")
     implementation ("androidx.camera:camera-extensions:1.3.1")
     //
-    
+
+    //QR
+    implementation ("com.google.zxing:core:3.5.2")
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation ("com.google.accompanist:accompanist-swiperefresh:0.23.0")
+
+
+    implementation ("com.google.code.gson:gson:2.10")
+
     implementation ("io.coil-kt:coil-compose:2.5.0")
 
     implementation ("com.google.accompanist:accompanist-permissions:0.34.0")

@@ -65,7 +65,7 @@ fun AddBeerSheet(
 
     Column(
         modifier = Modifier
-        .fillMaxWidth(),
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -91,7 +91,7 @@ fun AddBeerSheet(
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
         )
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         OutlinedTextField(
             value = beerName,
             onValueChange = { beerName = it },
@@ -102,7 +102,7 @@ fun AddBeerSheet(
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         OutlinedTextField(
             value = beerNote,
             onValueChange = { beerNote = it },
@@ -113,7 +113,7 @@ fun AddBeerSheet(
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         OutlinedTextField(
             value = beerRating.toString(),
             onValueChange = { beerRating = it.toIntOrNull() ?: 0 },
@@ -128,7 +128,7 @@ fun AddBeerSheet(
             modifier = Modifier
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment =  Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
             ElevatedButton(
@@ -143,20 +143,26 @@ fun AddBeerSheet(
             ) {
                 Text(text = "Take a picture")
             }
-            // Show image here
-            if (hasImage) {
-                imageUri?.let { uri ->
-                    Image(
-                        painter = rememberAsyncImagePainter(uri),
-                        contentDescription = "Captured Image",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .padding(vertical = 16.dp)
-                    )
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .height(120.dp)
+            ) {
+                // Show image here
+                if (hasImage) {
+                    imageUri?.let { uri ->
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "Captured Image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                //.height(150.dp)
+                                .padding(vertical = 16.dp)
+                        )
+                    }
                 }
             }
-            //Spacer(modifier = Modifier.height(60.dp))
             ElevatedButton(
                 onClick = {
                     // Create a new Beer object with the entered details
@@ -168,7 +174,7 @@ fun AddBeerSheet(
                         image = imageUri?.toString()
                     )
                     // Add the beer to the ViewModel
-                    viewModel.addBeer(newBeer)
+                    viewModel.addBeer(newBeer, imageUri)
                     Log.d("AddBeerSheet", "New beer added: $newBeer")
 
                     onBeerAdded()
@@ -187,3 +193,4 @@ fun AddBeerSheet(
         }
     }
 }
+//viewModel.addBeer(newBeer, imageFile = imageUri?.let { File(it.toString()) })

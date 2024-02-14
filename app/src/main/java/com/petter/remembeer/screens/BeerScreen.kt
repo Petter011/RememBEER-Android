@@ -183,6 +183,8 @@ fun BottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = modalBottomSheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
+        modifier = Modifier
+            .padding(top = 20.dp)
     ) {
         AddBeerSheet(
             viewModel = viewModel,
