@@ -4,9 +4,9 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
@@ -22,12 +22,22 @@ import java.util.UUID
 
 data class Beer(
     var id: UUID = UUID.randomUUID(),
-    var type: String = "",
-    var name: String = "",
-    var note: String = "",
-    var rating: Int = 0,
-    var image: String?
+    var type: String,
+    var name: String,
+    var note: String,
+    var rating: Int,
+    var image: String?,
+    var isScanned: Boolean
 )
+
+fun parseJsonFromString(jsonString: String): Beer? {
+    return try {
+        Gson().fromJson(jsonString, Beer::class.java)
+    } catch (e: JsonSyntaxException) {
+        e.printStackTrace()
+        null
+    }
+}
 
 class BeerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -40,8 +50,8 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         loadBeers()
     }
 
-    fun addBeer(beer: Beer, imageUri: Uri?) {
-        val beerWithId = beer.copy(id = UUID.randomUUID())
+    fun addBeer(beer: Beer, imageUri: Uri?, isScanned: Boolean) {
+        val beerWithId = beer.copy(id = UUID.randomUUID(),isScanned = isScanned)
         val imagePath = imageUri?.let { saveImage(it) }
         _beers.value = _beers.value + beerWithId.copy(image = imagePath)
         saveBeers()
@@ -78,16 +88,18 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         return beers.value.find { it.id == beerId }
     }
 
-    suspend fun generateQRCodeForBeer(beerId: UUID): File? = withContext(Dispatchers.IO) {
+    suspend fun generateQRCodeBitmapForBeer(beerId: UUID): Bitmap? = withContext(Dispatchers.IO) {
         val beer = getBeerById(beerId)
         if (beer != null) {
             try {
-                val qrCodeFile = File(getApplication<Application>().cacheDir, "beer_qr_code.png")
-                val bitmap = generateQRCodeBitmap(beer)
-                Log.d("QR_CODE_CONTENT", "QR Code Content: ${beer.name}, ${beer.type}, ${beer.note}, ${beer.rating}")
+                // Exclude the image field from the beer object before converting to JSON
+                val beerWithoutImage = beer.copy(image = null)
 
-                saveBitmapToFile(bitmap, qrCodeFile)
-                return@withContext qrCodeFile
+                // Convert the modified beer object to JSON
+                val jsonBeerData = Gson().toJson(beerWithoutImage)
+
+                // Generate QR code bitmap using the modified JSON data
+                return@withContext generateQRCodeBitmap(jsonBeerData)
             } catch (e: WriterException) {
                 e.printStackTrace()
             }
@@ -95,10 +107,11 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         return@withContext null
     }
 
-    private fun generateQRCodeBitmap(beer: Beer): Bitmap {
-        val text = "Name: ${beer.name}\nType: ${beer.type}\nNote: ${beer.note}\nRating: ${beer.rating}"
+
+    private fun generateQRCodeBitmap(jsonData: String): Bitmap {
         val multiFormatWriter = MultiFormatWriter()
-        val bitMatrix: BitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE, 500, 500)
+        val bitMatrix: BitMatrix =
+            multiFormatWriter.encode(jsonData, BarcodeFormat.QR_CODE, 500, 500)
         return createBitmapFromBitMatrix(bitMatrix)
     }
 
@@ -112,11 +125,5 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return bmp
-    }
-
-    private fun saveBitmapToFile(bitmap: Bitmap, file: File) {
-        FileOutputStream(file).use { outputStream ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-        }
     }
 }

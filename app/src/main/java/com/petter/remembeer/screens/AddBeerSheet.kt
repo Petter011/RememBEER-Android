@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -54,6 +57,7 @@ fun AddBeerSheet(
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
+    var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -156,8 +160,9 @@ fun AddBeerSheet(
                             painter = rememberAsyncImagePainter(uri),
                             contentDescription = "Captured Image",
                             modifier = Modifier
-                                .fillMaxSize()
-                                //.height(150.dp)
+                                //.fillMaxSize()
+                                .size(130.dp)
+                                .clip(RoundedCornerShape(20.dp))
                                 .padding(vertical = 16.dp)
                         )
                     }
@@ -165,19 +170,25 @@ fun AddBeerSheet(
             }
             ElevatedButton(
                 onClick = {
-                    // Create a new Beer object with the entered details
-                    val newBeer = Beer(
-                        type = beerType,
-                        name = beerName,
-                        note = beerNote,
-                        rating = beerRating,
-                        image = imageUri?.toString()
-                    )
-                    // Add the beer to the ViewModel
-                    viewModel.addBeer(newBeer, imageUri)
-                    Log.d("AddBeerSheet", "New beer added: $newBeer")
+                        // Check if beerType or imageUri is null
+                    if (beerType.isEmpty() || imageUri == null) {
+                        showDialog = true // Show the alert dialog
+                    } else {
+                        // Create a new Beer object with the entered details
+                        val newBeer = Beer(
+                            type = beerType,
+                            name = beerName,
+                            note = beerNote,
+                            rating = beerRating,
+                            image = imageUri?.toString(),
+                            isScanned = false
+                        )
+                        // Add the beer to the ViewModel
+                        viewModel.addBeer(newBeer, imageUri, isScanned = false)
+                        Log.d("AddBeerSheet", "New beer added: $newBeer")
 
-                    onBeerAdded()
+                        onBeerAdded()
+                    }
                 },
                 modifier = Modifier
                     .size(width = 150.dp, height = 50.dp),
@@ -190,7 +201,23 @@ fun AddBeerSheet(
                     )
                 )
             }
+            // Alert dialog for empty beerType or null imageUri
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false }, // Dismiss the dialog
+                    title = { Text(text = "Error") },
+                    text = {
+                        Text(text = "Please enter beer type and take an picture.")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { showDialog = false } // Dismiss the dialog
+                        ) {
+                            Text(text = "OK")
+                        }
+                    }
+                )
+            }
         }
     }
 }
-//viewModel.addBeer(newBeer, imageFile = imageUri?.let { File(it.toString()) })

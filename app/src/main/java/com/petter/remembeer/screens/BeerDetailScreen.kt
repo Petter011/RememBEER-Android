@@ -1,7 +1,8 @@
 package com.petter.remembeer.screens
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,41 +19,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import com.petter.remembeer.helper.Background
 import com.petter.remembeer.helper.Beer
 import com.petter.remembeer.helper.BeerViewModel
-import com.petter.remembeer.helper.Header
-import java.io.File
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BeerDetailScreen(
-    navController: NavHostController,
+    //navController: NavHostController,
     viewModel: BeerViewModel,
     selectedBeer: Beer,
 ) {
 
     val imageUri = remember { selectedBeer.image }
     val context = LocalContext.current
+    val qrCodeBitmap = remember { mutableStateOf<Bitmap?>(null) }
+    val haptics = LocalHapticFeedback.current
 
-    val qrCodeFile = remember {
-        mutableStateOf<File?>(null)
+
+    LaunchedEffect(selectedBeer.id) {
+        val qrBitmap = viewModel.generateQRCodeBitmapForBeer(selectedBeer.id)
+        qrCodeBitmap.value = qrBitmap
     }
 
-    LaunchedEffect(imageUri) {
-        if (imageUri != null) {
-            // Call the suspend function within the coroutine
-            val qrFile = viewModel.generateQRCodeForBeer(selectedBeer.id)
-            qrCodeFile.value = qrFile
-        }
-    }
-
-    Background()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,54 +55,58 @@ fun BeerDetailScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Header(text = selectedBeer.type)
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Name: ${selectedBeer.name}",
-            color = Color.White,
+            text = selectedBeer.type,
+            color = Color.Black,
             fontSize = 24.sp
         )
-        Text(
-            text = "Note: ${selectedBeer.note}",
-            color = Color.White,
-            fontSize = 24.sp
-        )
-        Text(
-            text = "Rating: ${selectedBeer.rating}",
-            color = Color.White,
-            fontSize = 24.sp
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Name: ${selectedBeer.name}",
+                color = Color.Black,
+                fontSize = 24.sp
+            )
+            Text(
+                text = "Note: ${selectedBeer.note}",
+                color = Color.Black,
+                fontSize = 24.sp
+            )
+            Text(
+                text = "Rating: ${selectedBeer.rating}",
+                color = Color.Black,
+                fontSize = 24.sp
+            )
 
-        if (imageUri != null) {
-            Box(
-                modifier = Modifier
-                    .size(150.dp)
-                    .clickable {
+            Spacer(modifier = Modifier.height(30.dp))
 
-                    }
-            ) {
-                Image(
-                    painter = rememberAsyncImagePainter(imageUri),
-                    contentDescription = "Beer Image",
-                    modifier = Modifier.fillMaxSize()
-                )
-                // Show the QR code if it's generated
-                qrCodeFile.value?.let { qrFile ->
+            if (imageUri != null) {
+                Box(
+                    modifier = Modifier
+                        .size(150.dp)
+
+                ) {
                     Image(
-                        painter = rememberAsyncImagePainter(qrFile),
-                        contentDescription = "QR Code",
+                        painter = rememberAsyncImagePainter(imageUri),
+                        contentDescription = "Beer Image",
                         modifier = Modifier.fillMaxSize()
                     )
+                    qrCodeBitmap.value?.let { qrBitmap ->
+                        Image(
+                            bitmap = qrBitmap.asImageBitmap(),
+                            contentDescription = "QR Code",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
         }
     }
 }
+

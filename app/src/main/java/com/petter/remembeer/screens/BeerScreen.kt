@@ -1,5 +1,6 @@
 package com.petter.remembeer.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -70,6 +71,7 @@ fun BeerScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ListView(
     navController: NavHostController,
@@ -77,15 +79,16 @@ fun ListView(
 ) {
     val beersState by viewModel.beers.collectAsState()
 
-    // Preprocess the list to merge consecutive beers with the same type
-    val mergedBeers = mutableListOf<Beer>()
+// Preprocess the list to merge consecutive beers with the same type and filter by not scanned
+    val mergedNotScannedBeers = mutableListOf<Beer>()
     var previousType: String? = null
     for (beer in beersState) {
-        if (beer.type != previousType) {
-            mergedBeers.add(beer)
+        if (beer.isScanned.not() && beer.type != previousType) {
+            mergedNotScannedBeers.add(beer)
             previousType = beer.type
         }
     }
+
 
     Column {
         Spacer(modifier = Modifier.height(20.dp))
@@ -93,7 +96,7 @@ fun ListView(
             columns = GridCells.Fixed(2),
             modifier = Modifier.weight(1f)
         ) {
-            items(mergedBeers) { beer ->
+            items(mergedNotScannedBeers) { beer ->
                 Card(
                     modifier = Modifier
                         .clickable {
@@ -139,7 +142,6 @@ fun ListView(
         }
     }
 }
-
 
 @Composable
 fun AddBeerButton(

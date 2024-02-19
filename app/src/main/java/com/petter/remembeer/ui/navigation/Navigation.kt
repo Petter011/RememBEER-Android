@@ -1,5 +1,7 @@
 package com.petter.remembeer.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -16,6 +18,7 @@ import com.petter.remembeer.screens.SettingsScreen
 import java.util.UUID
 
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
 
@@ -25,7 +28,7 @@ fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
             BeerScreen(navController, viewModel)
         }
         composable(NavigationItem.ReceivedBeer.route) {
-            ReceivedBeerScreen(viewModel)
+            ReceivedBeerScreen(navController,viewModel)
         }
         composable(NavigationItem.AllBeer.route) {
             AllBeerScreen(navController, viewModel)
@@ -38,7 +41,7 @@ fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
             val selectedBeer = viewModel.getBeerById(beerId)
 
             if (selectedBeer != null) {
-                BeerDetailScreen(navController, viewModel, selectedBeer)
+                BeerDetailScreen( viewModel, selectedBeer)
             } else {
                 // Handle case where selected beer is null
                 Text("Selected beer not found")
