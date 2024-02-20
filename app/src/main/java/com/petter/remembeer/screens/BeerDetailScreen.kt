@@ -1,6 +1,7 @@
 package com.petter.remembeer.screens
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +45,8 @@ fun BeerDetailScreen(
 
 
     LaunchedEffect(selectedBeer.id) {
-        val qrBitmap = viewModel.generateQRCodeBitmapForBeer(selectedBeer.id)
+        val beerImageBitmap = BitmapFactory.decodeFile(selectedBeer.image)
+        val qrBitmap = viewModel.generateQRCodeBitmapForBeer(selectedBeer.id, beerImageBitmap)
         qrCodeBitmap.value = qrBitmap
     }
 

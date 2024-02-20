@@ -4,7 +4,11 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.appcheck.internal.util.Logger.TAG
+import com.google.firebase.storage.storage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.zxing.BarcodeFormat
@@ -15,9 +19,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 
 data class Beer(
@@ -88,15 +97,21 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         return beers.value.find { it.id == beerId }
     }
 
-    suspend fun generateQRCodeBitmapForBeer(beerId: UUID): Bitmap? = withContext(Dispatchers.IO) {
+    suspend fun generateQRCodeBitmapForBeer(
+        beerId: UUID,
+        beerImageBitmap: Bitmap
+    ): Bitmap? = withContext(Dispatchers.IO) {
         val beer = getBeerById(beerId)
         if (beer != null) {
             try {
-                // Exclude the image field from the beer object before converting to JSON
-                val beerWithoutImage = beer.copy(image = null)
+                // Upload beer image to Firebase Storage and get download URL
+                val imageUrl = uploadBeerImageToFirebaseStorage(beer, beerImageBitmap)
+
+                // Modify beer object with image URL
+                val beerWithImageUrl = beer.copy(image = imageUrl)
 
                 // Convert the modified beer object to JSON
-                val jsonBeerData = Gson().toJson(beerWithoutImage)
+                val jsonBeerData = Gson().toJson(beerWithImageUrl)
 
                 // Generate QR code bitmap using the modified JSON data
                 return@withContext generateQRCodeBitmap(jsonBeerData)
@@ -126,4 +141,86 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         }
         return bmp
     }
+
+    private suspend fun uploadBeerImageToFirebaseStorage(beer: Beer, beerImageBitmap: Bitmap): String {
+        return suspendCoroutine { continuation ->
+            val storage = Firebase.storage
+            val storageRef = storage.reference
+            val imageRef = storageRef.child("beer_images/${UUID.randomUUID()}.jpg")
+
+            // Convert bitmap to byte array
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            beerImageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+            val imageData = byteArrayOutputStream.toByteArray()
+
+            // Upload image data to Firebase Storage
+            imageRef.putBytes(imageData)
+                .addOnSuccessListener { taskSnapshot ->
+                    // Retrieve the download URL
+                    imageRef.downloadUrl
+                        .addOnSuccessListener { uri ->
+                            // Return the download URL string
+                            continuation.resume(uri.toString())
+                        }
+                        .addOnFailureListener { exception ->
+                            // Handle failure to get download URL
+                            Log.e("BeerViewModel", "Error getting download URL: ${exception.message}")
+                            continuation.resumeWithException(exception)
+                        }
+                }
+                .addOnFailureListener { exception ->
+                    // Handle failure to upload image
+                    Log.e("BeerViewModel", "Error uploading image: ${exception.message}")
+                    continuation.resumeWithException(exception)
+                }
+        }
+    }
+
+    private fun decodeScannedData(scannedData: String): Pair<UUID, String> {
+        val jsonObject = JSONObject(scannedData)
+        val beerId = UUID.fromString(jsonObject.getString("beerId"))
+        val imageUrl = jsonObject.getString("imageUrl")
+        return Pair(beerId, imageUrl)
+    }
+
+    fun handleScannedQRCode(scannedBeer: Beer, callback: (ByteArray?) -> Unit) {
+        val imageUrl = scannedBeer.image
+
+        val storage = Firebase.storage
+        val storageRef = storage.reference
+        val imageRef = imageUrl?.let { storageRef.child(it) }
+
+        imageRef?.getBytes(1 * 1024 * 1024)?.addOnSuccessListener { imageData ->
+            // Pass the downloaded image data back to the caller
+            callback(imageData)
+        }?.addOnFailureListener { exception ->
+            // Handle failure to download image
+            Log.e(TAG, "Error downloading image: ${exception.message}", exception)
+            callback(null) // Pass null to indicate failure
+        }
+    }
+
 }
+
+
+/*
+   suspend fun generateQRCodeBitmapForBeer(beerId: UUID): Bitmap? = withContext(Dispatchers.IO) {
+        val beer = getBeerById(beerId)
+        if (beer != null) {
+            try {
+                // Exclude the image field from the beer object before converting to JSON
+                val beerWithoutImage = beer.copy(image = null)
+
+                // Convert the modified beer object to JSON
+                val jsonBeerData = Gson().toJson(beerWithoutImage)
+
+                // Generate QR code bitmap using the modified JSON data
+                return@withContext generateQRCodeBitmap(jsonBeerData)
+            } catch (e: WriterException) {
+                e.printStackTrace()
+            }
+        }
+        return@withContext null
+    }
+
+ */

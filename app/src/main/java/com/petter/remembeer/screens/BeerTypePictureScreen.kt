@@ -20,7 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,10 +57,11 @@ fun BeerTypePictureScreen(
     val qrCodeBitmap = remember { mutableStateOf<Bitmap?>(null) }
     val haptics = LocalHapticFeedback.current
 
-    LaunchedEffect(selectedBeer.id) {
-        val qrBitmap = viewModel.generateQRCodeBitmapForBeer(selectedBeer.id)
+    /*LaunchedEffect(selectedBeer.id) {
+        val beerImageBitmap = BitmapFactory.decodeFile(selectedBeer.image)
+        val qrBitmap = viewModel.generateQRCodeBitmapForBeer(selectedBeer.id, beerImageBitmap)
         qrCodeBitmap.value = qrBitmap
-    }
+    }*/
 
     if (showSheet) {
         BottomSheetDetail(onDismiss = { showSheet = false }, viewModel, selectedBeerId)

@@ -2,6 +2,7 @@ package com.petter.remembeer.screens
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
@@ -190,7 +195,9 @@ fun ScannedBeerListView(
 @Composable
 fun DisplayBeerInfo(jsonString: String, viewModel: BeerViewModel, navController: NavController) {
     val scannedBeer = parseJsonFromString(jsonString)
-val imageUri = null
+    val context = LocalContext.current
+    val imageUrl = scannedBeer?.image?.let { Uri.parse(it) } // Convert imageUrl to Uri
+
     Column(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -200,6 +207,7 @@ val imageUri = null
             .clip(RoundedCornerShape(20.dp))
             .background(Color.LightGray)
     ) {
+
         if (scannedBeer != null) {
             Text(
                 text = "Beer Name: ${scannedBeer.type}",
@@ -222,6 +230,8 @@ val imageUri = null
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+            BeerImage(url = scannedBeer.image)
+
         } else {
             Text(
                 text = "Error parsing beer information",
@@ -237,7 +247,7 @@ val imageUri = null
         ) {
             ElevatedButton(onClick = {
                if (scannedBeer != null) {
-                    viewModel.addBeer(scannedBeer, imageUri, isScanned = true)
+                    viewModel.addBeer(scannedBeer, imageUrl, isScanned = true)
                    Log.d("ScannedBeerSheet", "Scanned beer added: $scannedBeer")
                    navController.navigate(route = NavigationItem.ReceivedBeer.route)
                }
@@ -245,9 +255,21 @@ val imageUri = null
                 Text(text = "Save")
             }
         }
-
     }
 }
+@Composable
+fun BeerImage(url: String?, placeholder: Painter? = null) {
+    val painter = rememberAsyncImagePainter(model = url)
+
+    Image(
+        painter = painter,
+        contentDescription = "Beer Image",
+        modifier = Modifier.size(130.dp),
+        contentScale = ContentScale.FillBounds,
+        alignment = Alignment.Center,
+    )
+}
+
 
 class ScanActivity : AppCompatActivity() {
     private lateinit var barcodeView: DecoratedBarcodeView

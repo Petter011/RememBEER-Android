@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id ("kotlin-parcelize")
-
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -64,6 +64,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.room:room-common:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    //implementation("com.google.firebase:firebase-common-ktx:20.4.2")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -76,7 +77,7 @@ dependencies {
     implementation ("androidx.compose.runtime:runtime-livedata:1.6.1")
     implementation ("androidx.compose.ui:ui-tooling:1.6.1")
     implementation ("androidx.compose.foundation:foundation:1.6.1")
-    implementation ("androidx.compose.material:material:1.6.0")
+    implementation ("androidx.compose.material:material:1.6.1")
     implementation ("androidx.compose.runtime:runtime:1.6.1")
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -86,6 +87,14 @@ dependencies {
     implementation ("androidx.compose.ui:ui:1.6.1")
     implementation ("androidx.compose.ui:ui-tooling-preview:1.6.1")
     implementation ("androidx.compose.material3:material3:1.2.0")
+
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-storage")
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
+
+    implementation ("com.google.accompanist:accompanist-coil:0.15.0")
+
 
     // CameraX
     implementation ("androidx.camera:camera-camera2:1.3.1")
@@ -105,8 +114,6 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.10")
 
     implementation ("io.coil-kt:coil-compose:2.5.0")
-
-    implementation ("com.google.accompanist:accompanist-permissions:0.34.0")
 
     implementation ("com.google.mlkit:vision-common:17.3.0")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
