@@ -1,10 +1,8 @@
 package com.petter.remembeer.screens
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,34 +26,37 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import com.petter.remembeer.R
 import com.petter.remembeer.helper.Background
 import com.petter.remembeer.helper.Beer
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.helper.Header
 import java.util.UUID
 
-@OptIn(ExperimentalFoundationApi::class)
-@SuppressLint("RememberReturnType")
+
 @Composable
 fun BeerTypePictureScreen(
     navController: NavHostController,
     viewModel: BeerViewModel,
-    selectedBeer: Beer
+    selectedBeer: List<Beer>,
+    beerType: String
+
 ) {
-    val beersState by viewModel.beers.collectAsState()
+    //val beersState by viewModel.beers.collectAsState()
+    //val allBeerList by viewModel.allBeerList.collectAsState(initial = mutableListOf())
+    val beerlistobs by viewModel.beerlistobs.collectAsState(initial = mutableListOf())
+
 
     var showSheet by remember { mutableStateOf(false) }
 
     var selectedBeerId by remember { mutableStateOf<UUID?>(null) }
     val qrCodeBitmap = remember { mutableStateOf<Bitmap?>(null) }
     val haptics = LocalHapticFeedback.current
+    val selectedBeerNames = selectedBeer.map { it.name }.toSet()
+
 
     /*LaunchedEffect(selectedBeer.id) {
         val beerImageBitmap = BitmapFactory.decodeFile(selectedBeer.image)
@@ -75,55 +76,40 @@ fun BeerTypePictureScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Header(text = selectedBeer.type)
+        Header(text = beerType)
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
             modifier = Modifier.weight(1f)
         ) {
-            items(beersState.filter { it.type == selectedBeer.type }) { beer ->
-                val imageUri = remember { beer.image }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.padding( 10.dp)
-                ) {
-                    // Display the beer image if available
-                    imageUri?.let { uri ->
-                        Image(
-                            painter = rememberAsyncImagePainter(uri),
-                            contentDescription = "Beer Image",
-                            modifier = Modifier
-                                .size(130.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                //.aspectRatio(1f), // Keep aspect ratio to avoid distortion
-                                //contentScale = ContentScale.Crop
-                                //.clickable { selectedBeerId = beer.id; showSheet = true }
-                                .combinedClickable(onClick = {
-                                    selectedBeerId = beer.id; showSheet = true
-                                }, onLongClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            items(beerlistobs.filter { it.name in selectedBeerNames }) { beer ->
+                //val beerList = beerTypeWithBeers.beerList
 
-                                },
-                                    onLongClickLabel = stringResource(R.string.open_context_menu)
-                                )
-                        )
+                //beerList.forEach { beer ->
+                    val imageUri = beer.image
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.padding(10.dp)
+                    ) {
+                        // Display the beer image if available
+                        imageUri?.let { uri ->
+                            Image(
+                                painter = rememberAsyncImagePainter(uri),
+                                contentDescription = "Beer Image",
+                                modifier = Modifier
+                                    .size(130.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable(onClick = {
+                                        selectedBeerId = beer.uid; showSheet = true
+                                    })
+                            )
+                        }
                     }
                 }
-                /*if (selectedBeer != null) {
-                    PhotoActionsSheet(
-                        photo = selectedBeerId { it.id == selectedBeerId },
-                        onDismissSheet = { contextMenuPhotoId = null }
-                    )
-                }*/
             }
         }
     }
-}
 
-@Composable
-fun ShowQRCode(){
-
-}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,7 +117,7 @@ fun ShowQRCode(){
 fun BottomSheetDetail(
     onDismiss: () -> Unit,
     viewModel: BeerViewModel,
-    beerId: UUID? // Pass beer ID
+    beerId: UUID?, // Pass beer ID
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -142,28 +128,24 @@ fun BottomSheetDetail(
         modifier = Modifier.padding(top = 20.dp)
     ) {
         beerId?.let { id ->
-            val selectedBeer = viewModel.getBeerById(id)
+            val beerState by viewModel.beerlistobs.collectAsState(initial = emptyList())
+            val selectedBeer = beerState.find { it.uid == beerId }
             selectedBeer?.let {
                 BeerDetailScreen(viewModel, it)
             }
         }
+
+        /*beerId?.let { id ->
+            val beerState by viewModel.allBeerList.collectAsState(initial = emptyList())
+            val selectedBeer: Beer? = beerState
+                .flatMap { it.beerList } // Combine all lists of beers into a single list
+                .find { it.uid == beerId } // Find beer with matching uid
+            selectedBeer?.let {
+                BeerDetailScreen(viewModel, it)
+            }
+        }*/
     }
 }
 
 
-/*
-val imageUri = remember { selectedBeer.image }
 
-    Background()
-
-    if (imageUri != null) {
-        Image(
-            painter = rememberAsyncImagePainter(imageUri),
-            contentDescription = "Beer Image",
-            modifier = Modifier
-                .size(150.dp)
-                .clickable { navController.navigate("${NavigationItem.BeerDetail.route}/${selectedBeer.id}") }
-        )
-    }
-
- */

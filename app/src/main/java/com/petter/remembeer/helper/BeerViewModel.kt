@@ -3,70 +3,113 @@ package com.petter.remembeer.helper
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.firebase.Firebase
-import com.google.firebase.appcheck.internal.util.Logger.TAG
 import com.google.firebase.storage.storage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
-import com.google.zxing.WriterException
 import com.google.zxing.common.BitMatrix
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-
+@Entity
 data class Beer(
-    var id: UUID = UUID.randomUUID(),
-    var type: String,
-    var name: String,
-    var note: String,
-    var rating: Int,
-    var image: String?,
-    var isScanned: Boolean
+    @PrimaryKey val uid: UUID = UUID.randomUUID(),
+    //@ColumnInfo(name = "beerTypeName") val beerTypeName: String?, // Foreign key to BeerType
+    @ColumnInfo var type : String?,
+    @ColumnInfo var name: String?,
+    @ColumnInfo var note: String?,
+    @ColumnInfo var rating: Int?,
+    @ColumnInfo var image: String?,
+    //var isScanned: Boolean
 )
 
-fun parseJsonFromString(jsonString: String): Beer? {
-    return try {
-        Gson().fromJson(jsonString, Beer::class.java)
-    } catch (e: JsonSyntaxException) {
-        e.printStackTrace()
-        null
-    }
-}
+/*@Entity
+data class BeerType(
+    @PrimaryKey val uid: UUID = UUID.randomUUID(),
+    @ColumnInfo var name: String?
+)
+
+data class BeerTypeWithBeers(
+    @Embedded val beerType: BeerType,
+    @Relation(
+        parentColumn = "uid",
+        entityColumn = "beerTypeName"
+    )
+    val beerList: List<Beer>
+)*/
 
 class BeerViewModel(application: Application) : AndroidViewModel(application) {
+    /*private val beerDao = AppDatabase.getDatabase(null).beerDao()
+    val allBeerList = AppDatabase.getDatabase(application).beerDao().getAllBeerTypesWithBeers()*/
 
-    private val beersFile = File(application.filesDir, "beers.json")
 
-    private val _beers = MutableStateFlow<List<Beer>>(emptyList())
-    val beers: StateFlow<List<Beer>> = _beers
+    val beerlistobs = AppDatabase.getDatabase(null).beerDao().getAllflow()
+    fun addBeer(
+        beerType: String,
+        beerName: String,
+        beerNote: String,
+        beerRating: Int,
+        beerImage: String
+    ) {
 
-    init {
-        loadBeers()
+        val beerdao = AppDatabase.getDatabase(null).beerDao()
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            val tempbeer = Beer(
+                type = beerType,
+                name = beerName,
+                note = beerNote,
+                rating = beerRating,
+                image = beerImage
+            )
+            beerdao.insertAll(tempbeer)
+        }
+
+       /*CoroutineScope(Dispatchers.IO).launch {
+            val beerTypeObj = beerDao.getBeerTypeByName(beerType)
+            beerTypeObj?.let { type ->
+                val tempBeer = Beer(
+                    beerTypeName = type.name,
+                    name = beerName,
+                    note = beerNote,
+                    rating = beerRating,
+                    image = beerImage
+                )
+                beerDao.insertAll(tempBeer)
+            }
+        }*/
     }
 
-    fun addBeer(beer: Beer, imageUri: Uri?, isScanned: Boolean) {
-        val beerWithId = beer.copy(id = UUID.randomUUID(),isScanned = isScanned)
-        val imagePath = imageUri?.let { saveImage(it) }
-        _beers.value = _beers.value + beerWithId.copy(image = imagePath)
-        saveBeers()
+    fun deleteBeer(deletebeer: Beer) {
+        val beerdao = AppDatabase.getDatabase(null).beerDao()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            beerdao.delete(deletebeer)
+        }
     }
 
-    private fun saveImage(imageUri: Uri): String {
+
+    //private val beersFile = File(application.filesDir, "beers.json")
+
+    //private val _beers = MutableStateFlow<List<Beer>>(emptyList())
+    //val beers: StateFlow<List<Beer>> = _beers
+
+
+    /*private fun saveImage(imageUri: Uri): String {
         val context = getApplication<Application>()
         val inputStream = context.contentResolver.openInputStream(imageUri)
         val directory = File(context.filesDir, "images")
@@ -78,26 +121,10 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return destinationFile.absolutePath
-    }
+    }*/
 
-    private fun loadBeers() {
-        if (beersFile.exists()) {
-            val jsonString = beersFile.readText()
-            val beersList = Gson().fromJson(jsonString, Array<Beer>::class.java).toList()
-            _beers.value = beersList
-        }
-    }
 
-    private fun saveBeers() {
-        val jsonString = Gson().toJson(_beers.value)
-        beersFile.writeText(jsonString)
-    }
-
-    fun getBeerById(beerId: UUID): Beer? {
-        return beers.value.find { it.id == beerId }
-    }
-
-    suspend fun generateQRCodeBitmapForBeer(
+    /*suspend fun generateQRCodeBitmapForBeer(
         beerId: UUID,
         beerImageBitmap: Bitmap
     ): Bitmap? = withContext(Dispatchers.IO) {
@@ -121,6 +148,7 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         }
         return@withContext null
     }
+*/
 
 
     private fun generateQRCodeBitmap(jsonData: String): Bitmap {
@@ -142,7 +170,10 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         return bmp
     }
 
-    private suspend fun uploadBeerImageToFirebaseStorage(beer: Beer, beerImageBitmap: Bitmap): String {
+    private suspend fun uploadBeerImageToFirebaseStorage(
+        beer: Beer,
+        beerImageBitmap: Bitmap
+    ): String {
         return suspendCoroutine { continuation ->
             val storage = Firebase.storage
             val storageRef = storage.reference
@@ -164,7 +195,10 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         .addOnFailureListener { exception ->
                             // Handle failure to get download URL
-                            Log.e("BeerViewModel", "Error getting download URL: ${exception.message}")
+                            Log.e(
+                                "BeerViewModel",
+                                "Error getting download URL: ${exception.message}"
+                            )
                             continuation.resumeWithException(exception)
                         }
                 }
@@ -175,35 +209,44 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
                 }
         }
     }
+    /*
+    fun handleScannedQRCode(scannedBeer: Beer?, callback: (Beer?, Uri?) -> Unit) {
+        val imageUrl = scannedBeer?.image
 
-    private fun decodeScannedData(scannedData: String): Pair<UUID, String> {
-        val jsonObject = JSONObject(scannedData)
-        val beerId = UUID.fromString(jsonObject.getString("beerId"))
-        val imageUrl = jsonObject.getString("imageUrl")
-        return Pair(beerId, imageUrl)
-    }
-
-    fun handleScannedQRCode(scannedBeer: Beer, callback: (ByteArray?) -> Unit) {
-        val imageUrl = scannedBeer.image
-
-        val storage = Firebase.storage
-        val storageRef = storage.reference
+        val storageRef = Firebase.storage.reference
         val imageRef = imageUrl?.let { storageRef.child(it) }
 
         imageRef?.getBytes(1 * 1024 * 1024)?.addOnSuccessListener { imageData ->
-            // Pass the downloaded image data back to the caller
-            callback(imageData)
+            // Save the downloaded image locally
+            val localUri = saveImageLocally(imageData)
+            // Pass the scanned beer object and local image Uri back to the caller
+            callback(scannedBeer, localUri)
         }?.addOnFailureListener { exception ->
             // Handle failure to download image
             Log.e(TAG, "Error downloading image: ${exception.message}", exception)
-            callback(null) // Pass null to indicate failure
+            callback(scannedBeer, null) // Pass null Uri to indicate failure
         }
     }
+}
 
+private suspend fun downloadImage(url: String): ByteArray? {
+    return try {
+        val imageData = Firebase.storage.reference.child(url).getBytes(1 * 1024 * 1024).await()
+        imageData
+    } catch (e: Exception) {
+        Log.e(TAG, "Error downloading image: ${e.message}", e)
+        null
+    }
+}
+
+private fun decodeScannedData(scannedData: String): Pair<UUID, String> {
+    val jsonObject = JSONObject(scannedData)
+    val beerId = UUID.fromString(jsonObject.getString("beerId"))
+    val imageUrl = jsonObject.getString("imageUrl")
+    return Pair(beerId, imageUrl)
 }
 
 
-/*
    suspend fun generateQRCodeBitmapForBeer(beerId: UUID): Bitmap? = withContext(Dispatchers.IO) {
         val beer = getBeerById(beerId)
         if (beer != null) {
@@ -221,6 +264,16 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return@withContext null
-    }
 
- */
+
+     */
+}
+
+fun parseJsonFromString(jsonString: String): Beer? {
+    return try {
+        Gson().fromJson(jsonString, Beer::class.java)
+    } catch (e: JsonSyntaxException) {
+        e.printStackTrace()
+        null
+    }
+}

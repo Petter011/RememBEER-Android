@@ -67,9 +67,9 @@ sealed class NavigationItem(var route: String, val icon: ImageVector?, var title
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         NavigationItem.MyBeer,
-        NavigationItem.ReceivedBeer,
+        //NavigationItem.ReceivedBeer,
         NavigationItem.AllBeer,
-        NavigationItem.Settings
+        //NavigationItem.Settings
     )
     var selectedItem by remember { mutableStateOf(0) }
     var currentRoute by remember { mutableStateOf(NavigationItem.MyBeer.route) }

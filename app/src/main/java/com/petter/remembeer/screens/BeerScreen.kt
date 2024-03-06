@@ -1,6 +1,5 @@
 package com.petter.remembeer.screens
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.petter.remembeer.helper.Background
-import com.petter.remembeer.helper.Beer
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.helper.Header
 
@@ -71,23 +69,14 @@ fun BeerScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ListView(
     navController: NavHostController,
     viewModel: BeerViewModel
 ) {
-    val beersState by viewModel.beers.collectAsState()
-
-// Preprocess the list to merge consecutive beers with the same type and filter by not scanned
-    val mergedNotScannedBeers = mutableListOf<Beer>()
-    var previousType: String? = null
-    for (beer in beersState) {
-        if (beer.isScanned.not() && beer.type != previousType) {
-            mergedNotScannedBeers.add(beer)
-            previousType = beer.type
-        }
-    }
+    //val beerTypeList by viewModel.allBeerList.collectAsState(initial = mutableListOf())
+    val beerlistobs by viewModel.beerlistobs.collectAsState(initial = mutableListOf())
+    val uniqueBeerTypes = beerlistobs.distinctBy { it.type }
 
 
     Column {
@@ -96,19 +85,11 @@ fun ListView(
             columns = GridCells.Fixed(2),
             modifier = Modifier.weight(1f)
         ) {
-            items(mergedNotScannedBeers) { beer ->
+            items(uniqueBeerTypes) { beer ->
                 Card(
                     modifier = Modifier
                         .clickable {
-                            navController.navigate("${NavigationItem.BeerType.route}/${beer.id}")
-                            {
-                                launchSingleTop = true
-                                restoreState = true
-                                popUpTo(NavigationItem.MyBeer.route) {
-                                    inclusive =
-                                        false // Set inclusive to true to remove MyBeer from the back stack as well
-                                }
-                            }
+                            navController.navigate("${NavigationItem.BeerType.route}/${beer.type}")
                         }
                         .padding(8.dp)
                         .fillMaxWidth(),
@@ -125,7 +106,7 @@ fun ListView(
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
-                            text = beer.type,
+                            text = beer.type!!,
                             style = TextStyle(
                                 fontSize = 20.sp,
                                 color = Color.Yellow,

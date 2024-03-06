@@ -15,7 +15,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,14 +27,22 @@ import coil.compose.rememberAsyncImagePainter
 import com.petter.remembeer.helper.Background
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.helper.Header
+import java.util.UUID
 
 @Composable
 fun AllBeerScreen(
     navController : NavHostController,
-    viewModel: BeerViewModel
+    viewModel: BeerViewModel,
 ) {
 
-    val beerState by viewModel.beers.collectAsState()
+    //val allBeerList by viewModel.allBeerList.collectAsState(initial = mutableListOf())
+    val beerlistobs by viewModel.beerlistobs.collectAsState(initial = mutableListOf())
+    var showSheet by remember { mutableStateOf(false) }
+    var selectedBeerId by remember { mutableStateOf<UUID?>(null) }
+
+    if (showSheet) {
+        BottomSheetDetail(onDismiss = { showSheet = false }, viewModel, selectedBeerId)
+    }
 
     Background()
     Column(
@@ -42,32 +52,34 @@ fun AllBeerScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-    Header(text = "All Beer")
-
+        Header(text = "All Beer")
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
             modifier = Modifier
                 .weight(1f)
-            ){
-            items(beerState) {beer ->
-                val imageUri = remember { beer.image }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .padding(10.dp)
-                ) {
-                    imageUri.let { uri ->
+        ) {
+            items(beerlistobs) { beer ->
+
+                //beerList.forEach { beer ->
+                    val imageUri = beer.image
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(10.dp)
+                    ) {
                         Image(
-                            painter = rememberAsyncImagePainter(uri),
+                            painter = rememberAsyncImagePainter(imageUri),
                             contentDescription = "Beer Image",
                             modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .size(250.dp)
-                                .clickable { navController.navigate("${NavigationItem.BeerDetail.route}/${beer.id}") }
+                                .size(130.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { /*navController.navigate("${NavigationItem.BeerDetail.route}/${beer.uid}") */
+                                    selectedBeerId = beer.uid; showSheet = true
+
+                                }
                         )
                     }
                 }
             }
         }
     }
-}

@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import com.petter.remembeer.helper.AppDatabase
 import com.petter.remembeer.helper.BeerViewModel
 import com.petter.remembeer.screens.MainScreen
 import com.petter.remembeer.ui.theme.RememBEERTheme
@@ -18,6 +19,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        AppDatabase.getDatabase(applicationContext)
+
         setContent {
             val navController = rememberNavController()
 
@@ -31,5 +35,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
     }
 }

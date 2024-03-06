@@ -3,6 +3,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id ("kotlin-parcelize")
     id("com.google.gms.google-services")
+    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.kapt")
+
 }
 
 android {
@@ -57,7 +61,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    implementation(platform("androidx.compose:compose-bom:2024.02.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -68,27 +72,27 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.1")
-    implementation ("androidx.compose.ui:ui-tooling:1.6.1")
-    implementation ("androidx.compose.foundation:foundation:1.6.1")
-    implementation ("androidx.compose.material:material:1.6.1")
-    implementation ("androidx.compose.runtime:runtime:1.6.1")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.6.2")
+    implementation ("androidx.compose.ui:ui-tooling:1.6.2")
+    implementation ("androidx.compose.foundation:foundation:1.6.2")
+    implementation ("androidx.compose.material:material:1.6.2")
+    implementation ("androidx.compose.runtime:runtime:1.6.2")
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    implementation ("androidx.compose.ui:ui:1.6.1")
-    implementation ("androidx.compose.ui:ui-tooling-preview:1.6.1")
+    implementation ("androidx.compose.ui:ui:1.6.2")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.6.2")
     implementation ("androidx.compose.material3:material3:1.2.0")
 
-    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation(platform("com.google.firebase:firebase-bom:32.7.3"))
     implementation("com.google.firebase:firebase-storage")
     implementation ("com.github.bumptech.glide:glide:4.12.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
@@ -111,7 +115,7 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-swiperefresh:0.23.0")
 
 
-    implementation ("com.google.code.gson:gson:2.10")
+    implementation ("com.google.code.gson:gson:2.10.1")
 
     implementation ("io.coil-kt:coil-compose:2.5.0")
 
@@ -129,5 +133,26 @@ dependencies {
     ////KOIN KSP////
     implementation ("io.insert-koin:koin-annotations:1.2.2")
     implementation ("io.insert-koin:koin-ksp-compiler:1.2.2")
+
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+
+
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+
+    // To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:$room_version")
+    // To use Kotlin Symbol Processing (KSP)
+    //ksp("androidx.room:room-compiler:$room_version")
+
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation("androidx.room:room-ktx:$room_version")
+
+    implementation ("com.github.IamCheng5:ComposeWheelPicker:1.1")
 
 }

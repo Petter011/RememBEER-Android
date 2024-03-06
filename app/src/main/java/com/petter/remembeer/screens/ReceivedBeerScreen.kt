@@ -1,69 +1,7 @@
 package com.petter.remembeer.screens
 
-import android.app.Activity
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
-import com.google.zxing.ResultPoint
-import com.journeyapps.barcodescanner.BarcodeCallback
-import com.journeyapps.barcodescanner.BarcodeResult
-import com.journeyapps.barcodescanner.DecoratedBarcodeView
-import com.petter.remembeer.helper.Background
-import com.petter.remembeer.helper.Beer
-import com.petter.remembeer.helper.BeerViewModel
-import com.petter.remembeer.helper.Header
-import com.petter.remembeer.helper.parseJsonFromString
 
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@Composable
+/*@Composable
 fun ReceivedBeerScreen(navController: NavHostController, viewModel: BeerViewModel
 ) {
     val scannedResult = remember { mutableStateOf<String?>(null) }
@@ -127,16 +65,8 @@ fun ScannedBeerListView(
     navController: NavHostController,
     viewModel: BeerViewModel
 ) {
-    val scannedBeersState by viewModel.beers.collectAsState()
+    val allBeerList by viewModel.allBeerList.collectAsState(initial = mutableListOf())
 
-    val mergedScannedBeers = mutableListOf<Beer>()
-    var previousType: String? = null
-    for (beer in scannedBeersState) {
-        if (beer.isScanned && beer.type != previousType) {
-            mergedScannedBeers.add(beer)
-            previousType = beer.type
-        }
-    }
 
     Column {
         Spacer(modifier = Modifier.height(20.dp))
@@ -144,18 +74,14 @@ fun ScannedBeerListView(
             columns = GridCells.Fixed(2),
             modifier = Modifier.weight(1f)
         ) {
-            items(mergedScannedBeers) { beer ->
+            items(allBeerList) { beerTypeWithBeers ->
+                val beerList = beerTypeWithBeers.beerList
+
+                beerList.forEach { beer ->
                 Card(
                     modifier = Modifier
                         .clickable {
-                            navController.navigate("${NavigationItem.BeerType.route}/${beer.id}")
-                            {
-                                launchSingleTop = true
-                                restoreState = true
-                                popUpTo(NavigationItem.ReceivedBeer.route) {
-                                    inclusive = false
-                                }
-                            }
+                            navController.navigate("${NavigationItem.BeerType.route}/${beer.uid}")
                         }
                         .padding(8.dp)
                         .fillMaxWidth(),
@@ -172,7 +98,7 @@ fun ScannedBeerListView(
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
-                            text = beer.type,
+                            text = beer.name!!,
                             style = TextStyle(
                                 fontSize = 20.sp,
                                 color = Color.Yellow,
@@ -196,7 +122,9 @@ fun ScannedBeerListView(
 fun DisplayBeerInfo(jsonString: String, viewModel: BeerViewModel, navController: NavController) {
     val scannedBeer = parseJsonFromString(jsonString)
     val context = LocalContext.current
-    val imageUrl = scannedBeer?.image?.let { Uri.parse(it) } // Convert imageUrl to Uri
+    val imageUrl = scannedBeer?.image // Convert imageUrl to Uri
+    val uri = imageUrl?.let { Uri.parse(it) } // Convert String URL to Uri
+
 
     Column(
         verticalArrangement = Arrangement.Top,
@@ -210,7 +138,7 @@ fun DisplayBeerInfo(jsonString: String, viewModel: BeerViewModel, navController:
 
         if (scannedBeer != null) {
             Text(
-                text = "Beer Name: ${scannedBeer.type}",
+                text = " ${scannedBeer.name}",
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 20.dp)
             )
@@ -230,7 +158,7 @@ fun DisplayBeerInfo(jsonString: String, viewModel: BeerViewModel, navController:
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            BeerImage(url = scannedBeer.image)
+            //BeerImage(url = scannedBeer.image)
 
         } else {
             Text(
@@ -246,11 +174,11 @@ fun DisplayBeerInfo(jsonString: String, viewModel: BeerViewModel, navController:
                 .padding(bottom = 20.dp)
         ) {
             ElevatedButton(onClick = {
-               if (scannedBeer != null) {
-                    viewModel.addBeer(scannedBeer, imageUrl, isScanned = true)
-                   Log.d("ScannedBeerSheet", "Scanned beer added: $scannedBeer")
-                   navController.navigate(route = NavigationItem.ReceivedBeer.route)
-               }
+                if (scannedBeer != null) {
+                    //viewModel.addBeer(scannedBeer, uri, isScanned = true)
+                    Log.d("ScannedBeerSheet", "Scanned beer added: $scannedBeer")
+                    navController.navigate(route = NavigationItem.ReceivedBeer.route)
+                }
             }) {
                 Text(text = "Save")
             }
@@ -269,7 +197,6 @@ fun BeerImage(url: String?, placeholder: Painter? = null) {
         alignment = Alignment.Center,
     )
 }
-
 
 class ScanActivity : AppCompatActivity() {
     private lateinit var barcodeView: DecoratedBarcodeView
@@ -309,5 +236,5 @@ class ScanActivity : AppCompatActivity() {
         barcodeView.pause()
     }
 }
-
+*/
 
