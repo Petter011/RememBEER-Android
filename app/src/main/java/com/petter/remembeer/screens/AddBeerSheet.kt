@@ -25,6 +25,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,16 +38,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.andyliu.compose_wheel_picker.VerticalWheelPicker
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.petter.remembeer.camera.ComposeFileProvider
 import com.petter.remembeer.helper.BeerViewModel
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AddBeerSheet(
     viewModel: BeerViewModel,
@@ -64,13 +68,13 @@ fun AddBeerSheet(
 
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             hasImage = success
         }
     )
+    val cameraPermissionState = rememberPermissionState(permission = android.Manifest.permission.CAMERA)
 
     Column(
         modifier = Modifier
@@ -86,6 +90,7 @@ fun AddBeerSheet(
         )
     }
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .padding(vertical = 20.dp)
             .fillMaxSize(1f)
@@ -100,7 +105,7 @@ fun AddBeerSheet(
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters)
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
             value = beerName,
             onValueChange = { beerName = it },
@@ -111,7 +116,7 @@ fun AddBeerSheet(
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(
             value = beerNote,
             onValueChange = { beerNote = it },
@@ -122,18 +127,11 @@ fun AddBeerSheet(
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        OutlinedTextField(
-            value = beerRating.toString(),
-            onValueChange = { beerRating = it.toIntOrNull() ?: 0 },
-            label = { Text(text = "Rating") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-            shape = RoundedCornerShape(20.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        )
-        //TextPicker()
+        Spacer(modifier = Modifier.height(10.dp))
+        NumberPicker(onValueChanged = { selectedValue ->
+            beerRating = selectedValue
+        })
+
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -143,15 +141,20 @@ fun AddBeerSheet(
         ) {
             ElevatedButton(
                 onClick = {
-                    val uri = ComposeFileProvider.getImageUri(context)
-                    imageUri = uri
-                    cameraLauncher.launch(uri)
+                    if (!cameraPermissionState.status.isGranted){
+                        cameraPermissionState.launchPermissionRequest()
+                    } else {
+                        val uri = ComposeFileProvider.getImageUri(context)
+                        imageUri = uri
+                        cameraLauncher.launch(uri)
+                    }
                 },
                 modifier = Modifier
                     .size(width = 150.dp, height = 50.dp),
                 colors = ButtonDefaults.buttonColors(Color.Gray)
             ) {
-                Text(text = "Take a picture")
+                Text(text = "Take a picture", color = Color.Yellow)
+
             }
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -159,7 +162,6 @@ fun AddBeerSheet(
                 modifier = Modifier
                     .height(120.dp)
             ) {
-                // Show image here
                 if (hasImage) {
                     imageUri?.let { uri ->
                         Image(
@@ -176,11 +178,9 @@ fun AddBeerSheet(
             }
             ElevatedButton(
                 onClick = {
-                        // Check if beerType or imageUri is null
                     if (beerType.isEmpty() || imageUri == null) {
-                        showDialog = true // Show the alert dialog
+                        showDialog = true
                     } else {
-                        // Create a new Beer object with the entered details
                         imageUri?.toString()?.let { viewModel.addBeer(
                             beerType,
                             beerName,
@@ -191,13 +191,15 @@ fun AddBeerSheet(
                     }
                 },
                 modifier = Modifier
+                    .padding(bottom = 20.dp)
                     .size(width = 150.dp, height = 50.dp),
                 colors = ButtonDefaults.buttonColors(Color.Black),
             ) {
                 Text(
                     text = "Save",
                     style = TextStyle(
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color.Yellow
                     )
                 )
             }
@@ -221,17 +223,18 @@ fun AddBeerSheet(
         }
     }
 }
+
 @Composable
-internal fun TextPicker() {
-    val startIndex = 2
+internal fun NumberPicker(onValueChanged: (Int) -> Unit) {
+    val startIndex = 5
     val state = rememberLazyListState(startIndex)
     val scope = rememberCoroutineScope()
     var currentIndex by remember { mutableStateOf(startIndex) }
     VerticalWheelPicker(
         state = state,
-        count = 10,
-        itemHeight = 44.dp,
-        visibleItemCount = 3,
+        count = 11,
+        itemHeight = 24.dp,
+        visibleItemCount = 5,
         onScrollFinish = { currentIndex = it }) { index ->
         Box(
             modifier = Modifier
@@ -240,9 +243,13 @@ internal fun TextPicker() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Text $index",
+                text = "$index",
                 color = if (index == currentIndex) Color.Black else Color.Gray
             )
         }
+    }
+    DisposableEffect(currentIndex) {
+        onValueChanged(currentIndex)
+        onDispose { }
     }
 }

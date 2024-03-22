@@ -79,8 +79,8 @@ fun BeerDetailScreen(
         )
         Column(
             modifier = Modifier
-                .fillMaxSize(1f)
-                .padding(16.dp),
+                .fillMaxSize(1f),
+                //.padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -88,17 +88,24 @@ fun BeerDetailScreen(
             Text(
                 text = "Name: ${selectedBeer.name}",
                 color = Color.Black,
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                modifier = Modifier
+                    .padding(5.dp)
             )
             Text(
                 text = "Note: ${selectedBeer.note}",
                 color = Color.Black,
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                modifier = Modifier
+                    .padding(5.dp)
+
             )
             Text(
                 text = "Rating: ${selectedBeer.rating}",
                 color = Color.Black,
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                modifier = Modifier
+                    .padding(5.dp)
             )
 
             if (imageUri != null) {

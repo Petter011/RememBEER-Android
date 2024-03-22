@@ -45,10 +45,8 @@ fun BeerTypePictureScreen(
     beerType: String
 
 ) {
-    //val beersState by viewModel.beers.collectAsState()
-    //val allBeerList by viewModel.allBeerList.collectAsState(initial = mutableListOf())
-    val beerlistobs by viewModel.beerlistobs.collectAsState(initial = mutableListOf())
 
+    val beerlistobs by viewModel.beerlistobs.collectAsState(initial = mutableListOf())
 
     var showSheet by remember { mutableStateOf(false) }
 
@@ -82,9 +80,6 @@ fun BeerTypePictureScreen(
             modifier = Modifier.weight(1f)
         ) {
             items(beerlistobs.filter { it.name in selectedBeerNames }) { beer ->
-                //val beerList = beerTypeWithBeers.beerList
-
-                //beerList.forEach { beer ->
                     val imageUri = beer.image
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -110,8 +105,6 @@ fun BeerTypePictureScreen(
         }
     }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetDetail(
@@ -134,16 +127,6 @@ fun BottomSheetDetail(
                 BeerDetailScreen(viewModel, it)
             }
         }
-
-        /*beerId?.let { id ->
-            val beerState by viewModel.allBeerList.collectAsState(initial = emptyList())
-            val selectedBeer: Beer? = beerState
-                .flatMap { it.beerList } // Combine all lists of beers into a single list
-                .find { it.uid == beerId } // Find beer with matching uid
-            selectedBeer?.let {
-                BeerDetailScreen(viewModel, it)
-            }
-        }*/
     }
 }
 

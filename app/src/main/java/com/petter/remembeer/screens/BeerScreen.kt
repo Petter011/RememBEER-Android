@@ -74,7 +74,6 @@ fun ListView(
     navController: NavHostController,
     viewModel: BeerViewModel
 ) {
-    //val beerTypeList by viewModel.allBeerList.collectAsState(initial = mutableListOf())
     val beerlistobs by viewModel.beerlistobs.collectAsState(initial = mutableListOf())
     val uniqueBeerTypes = beerlistobs.distinctBy { it.type }
 

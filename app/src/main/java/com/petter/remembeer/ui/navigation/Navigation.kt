@@ -20,7 +20,6 @@ import java.util.UUID
 @Composable
 fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
 
-
     NavHost(navController, startDestination = NavigationItem.MyBeer.route) {
         composable(route = NavigationItem.MyBeer.route,
             ) {
@@ -45,18 +44,6 @@ fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
                 // Handle case where selected beer is null
                 Text("Selected beer not found")
             }
-            /*val beerState by viewModel.allBeerList.collectAsState(initial = emptyList())
-            val selectedBeer: Beer? = beerState
-                .flatMap { it.beerList } // Combine all lists of beers into a single list
-                .find { it.uid == beerId } // Find beer with matching uid
-            //val selectedBeer = beerState.find { it.beerlist.uid == beerId }
-
-            if (selectedBeer != null) {
-                BeerDetailScreen(viewModel, selectedBeer)
-            } else {
-                // Handle case where selected beer is null
-                Text("Selected beer not found")
-            }*/
         }
 
         composable(route = NavigationItem.BeerType.route + "/{beerType}",
