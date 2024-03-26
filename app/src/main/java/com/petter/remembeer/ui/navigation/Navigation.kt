@@ -39,7 +39,7 @@ fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
             val selectedBeer = beerState.find { it.uid == beerId }
 
             if (selectedBeer != null) {
-                BeerDetailScreen(viewModel, selectedBeer)
+                BeerDetailScreen(viewModel, selectedBeer, onDismiss = {})
             } else {
                 // Handle case where selected beer is null
                 Text("Selected beer not found")
@@ -50,7 +50,6 @@ fun Navigations(navController: NavHostController, viewModel: BeerViewModel) {
         ) { backStackEntry ->
             val beerType = backStackEntry.arguments?.getString("beerType") ?: ""
             val beerState by viewModel.beerlistobs.collectAsState(initial = emptyList())
-
             val beersOfSelectedType = beerState.filter { it.type == beerType }
 
             if (beersOfSelectedType.isNotEmpty()) {

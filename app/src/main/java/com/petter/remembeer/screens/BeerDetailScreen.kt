@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -34,28 +33,33 @@ fun BeerDetailScreen(
     //navController: NavHostController,
     viewModel: BeerViewModel,
     selectedBeer: Beer,
-) {
+    onDismiss: () -> Unit,
+    ) {
 
     val imageUri = remember { selectedBeer.image}
-    val context = LocalContext.current
-    //val qrCodeBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
-
-    /*LaunchedEffect(selectedBeer.id) {
-        val beerImageBitmap = BitmapFactory.decodeFile(selectedBeer.image)
-        val qrBitmap = viewModel.generateQRCodeBitmapForBeer(selectedBeer.id, beerImageBitmap)
-        qrCodeBitmap.value = qrBitmap
-    }*/
     Row(
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+                .fillMaxWidth()
+        ){
+        Spacer(modifier = Modifier.weight(1f))
+
+        Text(
+            text = selectedBeer.type!!,
+            color = Color.Black,
+            fontSize = 24.sp,
             modifier = Modifier
-                .fillMaxWidth(1f)
-                .padding(end = 10.dp)
-    ){
+                .weight(1f)
+                .padding(horizontal = 6.dp)
+        )
+
         IconButton(
             onClick = {
                 viewModel.deleteBeer(selectedBeer)
-            }
+                onDismiss()
+            },
         ) {
             Icon(
                 imageVector = Icons.Filled.Delete,
@@ -72,11 +76,7 @@ fun BeerDetailScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Text(
-            text = selectedBeer.type!!,
-            color = Color.Black,
-            fontSize = 24.sp
-        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize(1f),
@@ -98,7 +98,6 @@ fun BeerDetailScreen(
                 fontSize = 24.sp,
                 modifier = Modifier
                     .padding(5.dp)
-
             )
             Text(
                 text = "Rating: ${selectedBeer.rating}",
@@ -113,8 +112,9 @@ fun BeerDetailScreen(
                         painter = rememberAsyncImagePainter(imageUri),
                         contentDescription = "Beer Image",
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
                             .fillMaxSize(1f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .padding(all = 10.dp)
                     )
                     /*qrCodeBitmap.value?.let { qrBitmap ->
                         Image(

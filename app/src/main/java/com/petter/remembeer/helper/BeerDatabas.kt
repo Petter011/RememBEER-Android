@@ -10,19 +10,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 @Dao
 interface BeerDao {
-    /*@Query("SELECT * FROM beertype ORDER BY name ASC")
-    fun getAllTypes(): Flow<List<BeerType>>*/
-
     @Query("SELECT * FROM beer")
     fun getAll(): Flow<List<Beer>>
     @Query("SELECT * FROM beer ORDER BY type ASC")
     fun getAllflow(): Flow<List<Beer>>
     @Query("SELECT * FROM beer WHERE type = :beerType LIMIT 1")
     suspend fun getBeerByType(beerType: String): Beer?
-
+    @Query("SELECT * FROM Beer WHERE uid = :beerId")
+    suspend fun getBeerById(beerId: UUID): Beer?
     @Insert
     fun insertAll(vararg beer: Beer)
 
@@ -31,25 +30,9 @@ interface BeerDao {
 
     @Delete
     suspend fun delete(beer: Beer)
-
-    /*@Transaction
-    @Query("SELECT * FROM beer")
-    fun getAllBeerTypesWithBeers(): Flow<List<BeerTypeWithBeers>>
-
-
-    @Transaction
-    @Query("SELECT * FROM beerType")
-    fun getBeerTypeByName(name: String): BeerType?
-
-
-    @Transaction
-    @Query("SELECT * FROM BeerType")
-    fun getBeerTypeWithBeers(): Flow<List<BeerTypeWithBeers>> */
-
-
 }
 
-@Database(entities = [Beer::class/*, BeerType::class*/], version = 1)
+@Database(entities = [Beer::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun beerDao(): BeerDao
 

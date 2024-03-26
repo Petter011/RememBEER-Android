@@ -8,8 +8,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.firebase.Firebase
-import com.google.firebase.storage.storage
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.zxing.BarcodeFormat
@@ -18,6 +18,7 @@ import com.google.zxing.common.BitMatrix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 import kotlin.coroutines.resume
@@ -27,7 +28,6 @@ import kotlin.coroutines.suspendCoroutine
 @Entity
 data class Beer(
     @PrimaryKey val uid: UUID = UUID.randomUUID(),
-    //@ColumnInfo(name = "beerTypeName") val beerTypeName: String?, // Foreign key to BeerType
     @ColumnInfo var type : String?,
     @ColumnInfo var name: String?,
     @ColumnInfo var note: String?,
@@ -36,25 +36,7 @@ data class Beer(
     //var isScanned: Boolean
 )
 
-/*@Entity
-data class BeerType(
-    @PrimaryKey val uid: UUID = UUID.randomUUID(),
-    @ColumnInfo var name: String?
-)
-
-data class BeerTypeWithBeers(
-    @Embedded val beerType: BeerType,
-    @Relation(
-        parentColumn = "uid",
-        entityColumn = "beerTypeName"
-    )
-    val beerList: List<Beer>
-)*/
-
 class BeerViewModel(application: Application) : AndroidViewModel(application) {
-    /*private val beerDao = AppDatabase.getDatabase(null).beerDao()
-    val allBeerList = AppDatabase.getDatabase(application).beerDao().getAllBeerTypesWithBeers()*/
-
 
     val beerlistobs = AppDatabase.getDatabase(null).beerDao().getAllflow()
     fun addBeer(
@@ -64,7 +46,6 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
         beerRating: Int,
         beerImage: String
     ) {
-
         val beerdao = AppDatabase.getDatabase(null).beerDao()
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -78,22 +59,7 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
             )
             beerdao.insertAll(tempbeer)
         }
-
-       /*CoroutineScope(Dispatchers.IO).launch {
-            val beerTypeObj = beerDao.getBeerTypeByName(beerType)
-            beerTypeObj?.let { type ->
-                val tempBeer = Beer(
-                    beerTypeName = type.name,
-                    name = beerName,
-                    note = beerNote,
-                    rating = beerRating,
-                    image = beerImage
-                )
-                beerDao.insertAll(tempBeer)
-            }
-        }*/
     }
-
     fun deleteBeer(deletebeer: Beer) {
         val beerdao = AppDatabase.getDatabase(null).beerDao()
 
@@ -103,53 +69,24 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    //private val beersFile = File(application.filesDir, "beers.json")
-
-    //private val _beers = MutableStateFlow<List<Beer>>(emptyList())
-    //val beers: StateFlow<List<Beer>> = _beers
-
-
-    /*private fun saveImage(imageUri: Uri): String {
-        val context = getApplication<Application>()
-        val inputStream = context.contentResolver.openInputStream(imageUri)
-        val directory = File(context.filesDir, "images")
-        directory.mkdirs()
-        val destinationFile = File(directory, "beer_${UUID.randomUUID()}.jpg")
-        inputStream?.use { input ->
-            FileOutputStream(destinationFile).use { output ->
-                input.copyTo(output)
-            }
-        }
-        return destinationFile.absolutePath
-    }*/
-
-
-    /*suspend fun generateQRCodeBitmapForBeer(
+    suspend fun generateQRCodeBitmapForBeer(
         beerId: UUID,
         beerImageBitmap: Bitmap
     ): Bitmap? = withContext(Dispatchers.IO) {
-        val beer = getBeerById(beerId)
+        val beerdao = AppDatabase.getDatabase(null).beerDao()
+        val beer = beerdao.getBeerById(beerId)
         if (beer != null) {
             try {
-                // Upload beer image to Firebase Storage and get download URL
                 val imageUrl = uploadBeerImageToFirebaseStorage(beer, beerImageBitmap)
-
-                // Modify beer object with image URL
                 val beerWithImageUrl = beer.copy(image = imageUrl)
-
-                // Convert the modified beer object to JSON
                 val jsonBeerData = Gson().toJson(beerWithImageUrl)
-
-                // Generate QR code bitmap using the modified JSON data
                 return@withContext generateQRCodeBitmap(jsonBeerData)
-            } catch (e: WriterException) {
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
         return@withContext null
     }
-*/
-
 
     private fun generateQRCodeBitmap(jsonData: String): Bitmap {
         val multiFormatWriter = MultiFormatWriter()
@@ -209,6 +146,9 @@ class BeerViewModel(application: Application) : AndroidViewModel(application) {
                 }
         }
     }
+
+
+
     /*
     fun handleScannedQRCode(scannedBeer: Beer?, callback: (Beer?, Uri?) -> Unit) {
         val imageUrl = scannedBeer?.image
